@@ -21,8 +21,7 @@ image:
 2. 访问UI 管理界面 : 
 
 + http://<ip>:9090/ui/ （防火墙开启9090，可以访问）
-+ 推荐：先使用**本地端口转发**（可以使用vscode插件 remote ssh 插件的 port forward 功能等），再访问 http://127.0.0.1:9090/ui/    <img src="/assets/img/2024-08-15-docker镜像源被封：Linux服务器挂代理%20+%20docker%20配置代理/2024-08-15-16-00-57.png" alt="image-20240810105939148" style="zoom: 25%;" />
-
++ 推荐：先使用**本地端口转发**（可以使用vscode插件 remote ssh 插件的 port forward 功能等），再访问 http://127.0.0.1:9090/ui/ <img src="../assets/img/posts24/2024-08-16-19-39-23.png" alt="image-20240810105939148" style="zoom: 25%;" />
 3. 登录：
 
    在`API Base URL`一栏中输入：http://<ip>:9090 ，在`Secret(optional)`一栏中输入启动成功后输出的Secret。
@@ -59,4 +58,4 @@ image:
           在服务器上设置了代理时，通常这个代理配置只影响使用标准网络库的程序（如`wget`、`curl`等），而对于Docker这样的服务进程，它不会自动继承或使用这些系统级的代理设置。因此，Docker需要单独配置代理。
 
 
-![](/assets/img/2024-08-15-docker镜像源被封：Linux服务器挂代理%20+%20docker%20配置代理/2024-08-15-16-00-27.png)
+![](/assets/img/posts24/2024-08-16-19-39-42.png)
