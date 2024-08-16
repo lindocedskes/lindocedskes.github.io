@@ -1,0 +1,15 @@
+{
+    "rewrites": [
+      {
+        "source": "/:match*/",
+        "destination": "/:match*"
+      },
+      {
+        "source": "/nbu-icicles/:match*",
+        "destination": "https://nbu-icicles.vercel.app/:match*"
+      }
+    ],
+    "github": {
+        "silent": true
+    }
+  }
