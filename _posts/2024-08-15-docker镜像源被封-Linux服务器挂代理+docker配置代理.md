@@ -1,5 +1,5 @@
 ---
-title: docker镜像源被封：Linux服务器挂代理 + docker 配置代理
+title: docker镜像源被封-Linux服务器挂代理+docker配置代理
 description: 解决docker镜像源被封问题
 author: #有默认值
 date: 2024-08-15 12:13:14 +0800
@@ -32,6 +32,10 @@ image:
 
 4. 测试：
    执行proxy_on 命令后用**curl或wget**命令测试github、google等网站，ping命令走ICMP协议，本身不通过代理。
+   curl http://google.com
+
+5. 更新订阅
+   重新 sudo bash start.sh ，restart无效
 
 ## 二、docker设置代理
 
