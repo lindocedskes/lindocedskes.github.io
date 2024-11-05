@@ -1,6 +1,6 @@
 ---
-title: docker镜像源被封-Linux挂clash代理+docker配置代理
-description: 解决docker镜像源被封问题
+title: Linux挂clash代理+docker配置代理
+description: Linux挂clash代理、全局代理、解决docker镜像源被封问题
 author: #有默认值
 date: 2024-08-15 12:13:14 +0800
 categories:  [tools, Demo]
@@ -9,10 +9,159 @@ pin:  # 默认false，可填true
 math: true
 mermaid: true
 image:
-  path: /assets/bar/backimg.png
+  path: /assets/bar/clashMeta.png
   lqip: data:image/webp;base64,UklGRpoAAABXRUJQVlA4WAoAAAAQAAAADwAABwAAQUxQSDIAAAARL0AmbZurmr57yyIiqE8oiG0bejIYEQTgqiDA9vqnsUSI6H+oAERp2HZ65qP/VIAWAFZQOCBCAAAA8AEAnQEqEAAIAAVAfCWkAALp8sF8rgRgAP7o9FDvMCkMde9PK7euH5M1m6VWoDXf2FkP3BqV0ZYbO6NA/VFIAAAA
   alt:  # 图片名
 ---
+
+## 实验室服务器挂代理 （无root权限用户）
+### 需求说明
+linux无sudo权限以及非root的用户，用apt安装软件
+
+`一般来说使用apt安装软件，必须要有root权限，因为apt安装时需要写/usr/bin、/usr/share等目录，而这些目录只有root用户(或有sudo权限)才有写入权限的，所以没有sudo权限的普通用户，要用apt安装软件的话，就只能以源码安装方式来安装了`
+具体操作如下:
+
+1. 获取源代码；常用`wget/curl`下载，也可以用类似`apt-get source`的方式获取仓库中软件源代码；
+2. 解压源代码安装包；例如对于gzip格式的tar包：`tar -zxvf xxx.tar.gz`；
+#### 一般过程：使用wget 下载源代码安装包后编译安装:
+
+下载源码，编译安装
+
+```shell
+#1.获取压缩包 wget
+wget https://XXXX.tar.gz 
+#2.解压，进入文件
+tar -zxvf XXXX.tar.gz 
+cd XXXX
+```
+
+```shell
+#3.设置安装路径，并编译，安装
+./configure --prefix=/home/your_username/install # /home/username/install/是我放置的位置，该目录下有个bin
+make -j && make install
+```
+
+
+### 第一步：设置非root用户命令的安装路径 
+> 具有root权限的用户直接跳过
+{: .prompt-tip}
+2. 设置 `PATH`（只需要第一次的时候设置）:
+
+`vim ~/.bashrc` ，目的是指明用户安装的位置为 `your_username/install` 安装好的命令路径在对应`/bin`位置
+
+```shell
+export PATH=/home/username/install/bin:$PATH
+```
+
+保存并退出编辑器，然后执行以下命令使更改生效：
+
+```shell
+source ~/.bashrc
+```
+
+### 第二步：服务器安装clash
+
+视频教程：https://www.youtube.com/watch?v=0OmO5_HsVPU  6:30 开始看 （一般的安装）
+
+**下面是我自己写的步骤：** 适合偏向非root用户
+
+[Clash Meta](https://github.com/MetaCubeX/mihomo/releases/latest)  改名为mihomo
+
+根据官网教程下载系统对应文件：（实验室服务器是debian  x86）
+https://wiki.metacubex.one/startup/#__tabbed_1_2 
+如：mihomo-linux-amd64.deb
+
+由于没有 root 权限，使用 `dpkg-deb` 命令手动解压 `.deb` 包，然后将文件移动到你指定的目录（！！！）
+
+```shell
+#创建一个临时目录来解压 .deb 包
+mkdir ~/temp_deb
+# 使用 dpkg-deb 命令解压 .deb 包：
+dpkg-deb -x mihomo-linux-amd64.deb ~/temp_deb
+# 将解压后的文件移动到你指定的安装目录
+mv ~/temp_deb/* /home/your_username/install/
+# 将解压后的文件移动到合适的位置，由于目标目录中已经存在同名文件或目录，使用 cp 命令合并目录内容 
+cp -r /home/your_username/install/usr/* /home/your_username/install/
+mv /home/your_username/install/etc/* /home/your_username/install/
+#（若之前已经写过path环境变量可跳过）确保 bin 目录中的可执行文件在你自定义的 PATH 环境变量中
+export PATH=/home/your_username/install/bin:$PATH
+
+#运行程序
+mihomo
+```
+
+/home/your_username/install/bin 是我自定义的非root用户 指定命令安装的位置。
+
+将你的机场得到的配置文件 config.yaml 复制到 /home/your_username/install/etc/mihomo:
+
+```
+cp config.yaml /home/your_username/install/etc/mihomo
+```
+
+在config.yam 中添加控制面板 ui  
+
+```yaml
+# 控制面板
+external-controller: 0.0.0.0:9090 # 访问端口
+secret: "sdvwa@4af" # 控制面板设置的密码
+external-ui: ui
+external-ui-url: "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
+```
+
+发现页面空白，检查后ui文件夹下没东西。将https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip 手动下载 解压放入  ，并改名为ui
+
+>  /home/your_username/install/etc/mihomo/ui
+
+编辑systemd 配置文件 /home/your_username/instal/etc/systemd/system/mihomo.servic`
+
+注意修改 `ExecStart` 以匹配你自定义的安装位置。
+
+```
+[Unit]
+Description=mihomo Daemon, Another Clash Kernel.
+After=network.target NetworkManager.service systemd-networkd.service iwd.service
+
+[Service]
+Type=simple
+LimitNPROC=500
+LimitNOFILE=1000000
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_TIME CAP_SYS_PTRACE CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BND_SERVICE CAP_SYS_TIME CAP_SYS_PTRACE CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE
+Restart=always
+ExecStartPre=/usr/bin/sleep 1s
+ExecStart=/home/luoyutao24/install/bin/mihomo -d /home/your_username/install/etc/mihomo
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**手动运行**-control c 关闭进程时关闭，不建议一直开着，实验室服务器还是按需开比较安全。
+
+```
+/home/your_username/install/bin/mihomo -d /home/your_username/install/etc/mihomo
+```
+
+访问控制面板：
+
+```
+http://127.0.0.1:9090/ui/#/setup
+```
+
+让linux 走代理端口：7890
+
+```
+export ALL_PROXY=http://127.0.0.1:7890
+```
+
+ALL_PROXY 通常包括包括 HTTP、HTTPS、FTP 等的流量。
+
+按照rule 规则匹配。线路选择通过控制面板 切换国外流量线路。
+
+docker 应该就走7890的代理流量了，应该不用再配置（还没试过）
+
+> 下面是较旧的内容，在云服务器上安装，尝试使用clash-core 内核+ yacd 的web ui 控制面板 来使用，但clash-core内核源作者删库，来源于第三方备份的版本，不如使用上面的由 [Clash Meta](https://github.com/MetaCubeX/mihomo/releases/latest)  改名为mihomo 在维护的内核。
+{: .prompt-warning}
 
 ## 一、服务器挂代理
 
