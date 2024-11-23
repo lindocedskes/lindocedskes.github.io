@@ -3,7 +3,7 @@ title: Linux挂clash代理+docker配置代理
 description: Linux挂clash代理、全局代理、解决docker镜像源被封问题
 author: #有默认值
 date: 2024-08-15 12:13:14 +0800
-categories:  [tools, Demo]
+categories:  [tools,vpn]
 tags:  [docker,linux]     # TAG names should always be lowercase
 pin:  # 默认false，可填true
 math: true
@@ -103,7 +103,7 @@ cp config.yaml /home/your_username/install/etc/mihomo
 ```yaml
 # 控制面板
 external-controller: 0.0.0.0:9090 # 访问端口
-secret: "sdvwa@4af" # 控制面板设置的密码
+secret: "" # 控制面板设置的密码
 external-ui: ui
 external-ui-url: "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
 ```
