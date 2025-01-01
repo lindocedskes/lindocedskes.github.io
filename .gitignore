@@ -17,6 +17,7 @@ package-lock.json
 
 # IDE configurations
 .idea
+<<<<<<< HEAD
 .vscode
 !.vscode/settings.json
 !.vscode/extensions.json
@@ -27,3 +28,13 @@ assets/js/dist
 
 #mac
 .DS_Store
+=======
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+
+# Misc
+_sass/vendors
+assets/js/dist
+>>>>>>> v7.2.4
